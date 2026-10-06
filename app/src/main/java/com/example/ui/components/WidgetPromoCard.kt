@@ -287,7 +287,7 @@ fun WidgetPromoCard(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // In-App Preview of the Weekly Rain & Temperature Curve Chart
+                        // In-App Preview of the Weekly Rain & Temperature Curve Chart (RTL Aligned with Columns)
                         val days = forecastList.take(7)
                         if (days.isNotEmpty()) {
                             Canvas(
@@ -298,20 +298,22 @@ fun WidgetPromoCard(
                                     .background(Color(0x260F172A))
                             ) {
                                 val count = days.size
-                                val stepX = size.width / (count - 1).coerceAtLeast(1)
+                                val colWidth = size.width / count
+                                fun getX(i: Int) = size.width - (i + 0.5f) * colWidth
+
                                 val maxRain = days.maxOfOrNull { it.rainSumMm }?.toFloat()?.coerceAtLeast(3.0f) ?: 5f
                                 val minT = days.minOfOrNull { it.tempMin }?.toFloat() ?: 10f
                                 val maxT = days.maxOfOrNull { it.tempMax }?.toFloat() ?: 35f
                                 val span = (maxT - minT).coerceAtLeast(2f)
 
-                                // 1. Rain filled area
+                                // 1. Rain filled area from Left to Right (day count-1 down to 0)
                                 val rainPath = Path().apply {
                                     moveTo(0f, size.height)
-                                    days.forEachIndexed { i, d ->
-                                        val x = i * stepX
-                                        val ratio = (d.rainSumMm.toFloat() / maxRain).coerceIn(0f, 1f)
-                                        val y = size.height - (ratio * (size.height * 0.75f))
-                                        if (i == 0) lineTo(x, y) else lineTo(x, y)
+                                    for (i in (count - 1) downTo 0) {
+                                        val x = getX(i)
+                                        val ratio = (days[i].rainSumMm.toFloat() / maxRain).coerceIn(0f, 1f)
+                                        val y = size.height - (ratio * (size.height * 0.72f))
+                                        lineTo(x, y)
                                     }
                                     lineTo(size.width, size.height)
                                     close()
@@ -323,13 +325,13 @@ fun WidgetPromoCard(
                                     )
                                 )
 
-                                // 2. Max temp line
+                                // 2. Max temp line from Left to Right (day count-1 down to 0)
                                 val maxTempPath = Path().apply {
-                                    days.forEachIndexed { i, d ->
-                                        val x = i * stepX
-                                        val ratio = (d.tempMax.toFloat() - minT) / span
+                                    for (i in (count - 1) downTo 0) {
+                                        val x = getX(i)
+                                        val ratio = (days[i].tempMax.toFloat() - minT) / span
                                         val y = (1f - ratio) * (size.height * 0.45f)
-                                        if (i == 0) moveTo(x, y) else lineTo(x, y)
+                                        if (i == count - 1) moveTo(x, y) else lineTo(x, y)
                                     }
                                 }
                                 drawPath(
@@ -338,13 +340,13 @@ fun WidgetPromoCard(
                                     style = Stroke(width = 2.5f, cap = StrokeCap.Round)
                                 )
 
-                                // 3. Min temp line
+                                // 3. Min temp line from Left to Right (day count-1 down to 0)
                                 val minTempPath = Path().apply {
-                                    days.forEachIndexed { i, d ->
-                                        val x = i * stepX
-                                        val ratio = (d.tempMin.toFloat() - minT) / span
+                                    for (i in (count - 1) downTo 0) {
+                                        val x = getX(i)
+                                        val ratio = (days[i].tempMin.toFloat() - minT) / span
                                         val y = (size.height * 0.45f) + (1f - ratio) * (size.height * 0.4f)
-                                        if (i == 0) moveTo(x, y) else lineTo(x, y)
+                                        if (i == count - 1) moveTo(x, y) else lineTo(x, y)
                                     }
                                 }
                                 drawPath(
