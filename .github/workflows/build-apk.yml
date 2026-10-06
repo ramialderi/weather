@@ -1,0 +1,44 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # The runner already has the Android SDK; just accept the licenses so Gradle can download platforms
+      - name: Accept Android SDK licenses
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+
+      # The repo has no gradlew, so install the Gradle version the project asks for
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.3.1"
+
+      # debug.keystore is in .gitignore, but build.gradle.kts expects it, so create it here
+      - name: Create debug keystore
+        run: >
+          keytool -genkeypair -v
+          -keystore debug.keystore
+          -storepass android -keypass android
+          -alias androiddebugkey
+          -keyalg RSA -keysize 2048 -validity 10000
+          -dname "CN=Android Debug,O=Android,C=US"
+
+      - name: Build debug APK
+        run: gradle assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quran-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
