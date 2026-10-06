@@ -134,16 +134,22 @@ class WeatherRepository(
         refreshWeatherForCity(city.id, city.latitude, city.longitude)
     }
 
-    suspend fun refreshWeatherForCity(cityId: Long, lat: Double, lon: Double): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun refreshWeatherForCity(
+        cityId: Long,
+        lat: Double,
+        lon: Double,
+        notifyWidgets: Boolean = true
+    ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val response = api.getForecast(
                 latitude = lat,
                 longitude = lon
             )
             saveForecastResponse(cityId, response)
-            // Trigger Widget Update immediately for both 7-day and current-temp widgets
-            WeatherWidgetProvider.updateAllWidgets(context)
-            com.example.widget.CurrentTempWidgetProvider.updateAllWidgets(context)
+            if (notifyWidgets) {
+                WeatherWidgetProvider.updateAllWidgets(context)
+                com.example.widget.CurrentTempWidgetProvider.updateAllWidgets(context)
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e("WeatherRepository", "Failed to fetch weather: ${e.message}", e)
@@ -234,7 +240,7 @@ class WeatherRepository(
 
             var forecast = dao.getDailyForecastSync(city.id)
             if (forecast.isEmpty()) {
-                refreshWeatherForCity(city.id, city.latitude, city.longitude)
+                refreshWeatherForCity(city.id, city.latitude, city.longitude, notifyWidgets = false)
                 forecast = dao.getDailyForecastSync(city.id)
             }
             Pair(city, forecast)

@@ -44,14 +44,11 @@
             android:src="@drawable/ic_weather_refresh" />
     </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="6dp" />
-
     <!-- Center: Weather Icon and Main Temperature -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -62,13 +59,10 @@
             android:contentDescription="Weather Condition"
             android:src="@drawable/ic_weather_sun" />
 
-        <View
-            android:layout_width="10dp"
-            android:layout_height="match_parent" />
-
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -94,21 +88,15 @@
         </LinearLayout>
     </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="6dp" />
-
     <!-- Bottom: High / Low and Rain Chance -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
         android:background="@drawable/widget_item_bg"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingLeft="8dp"
-        android:paddingRight="8dp"
-        android:paddingTop="5dp"
-        android:paddingBottom="5dp">
+        android:padding="8dp">
 
         <TextView
             android:id="@+id/widget_current_range"
