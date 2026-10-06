@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">طقس ومطر</string>
+    <string name="widget_name">ودجت طقس 7 أيام والأمطار</string>
+    <string name="widget_description">يعرض درجات الحرارة والأمطار المتوقعة لمدة 7 أيام مع التحديث التلقائي</string>
+    <string name="widget_current_temp_title">ودجت درجة الحرارة الحالية</string>
+    <string name="widget_current_temp_desc">يعرض درجة الحرارة والطقس المباشر والأمطار لمدينتك</string>
+    <string name="widget_7day_summary_title">ودجت ملخص 7 أيام</string>
+    <string name="widget_7day_summary_desc">يعرض درجات الحرارة والأمطار لسبعة أيام القادمة</string>
+    <string name="search_city_placeholder">ابحث عن مدينة أو دولة…</string>
+    <string name="current_location">الموقع الحالي</string>
+    <string name="seven_day_forecast">توقعات 7 أيام القادمة</string>
+    <string name="rain_and_temp">الأمطار ودرجات الحرارة</string>
+    <string name="rain_chance">احتمال الأمطار</string>
+    <string name="precipitation">كمية الهطول</string>
+    <string name="humidity">الرطوبة</string>
+    <string name="wind_speed">سرعة الرياح</string>
+    <string name="uv_index">مؤشر UV</string>
+    <string name="feels_like">الحرارة المحسوسة</string>
+    <string name="today">اليوم</string>
+    <string name="tomorrow">غداً</string>
+    <string name="refresh">تحديث</string>
+    <string name="favorites">المفضلة</string>
+    <string name="add_to_home">إضافة الويدجت للشاشة الرئيسية</string>
+    <string name="widget_preview_title">معاينة ويدجت الشاشة</string>
+    <string name="last_updated">آخر تحديث</string>
+    <string name="location_permission_needed">يحتاج التطبيق لإذن الموقع لجلب طقس مدينتك تلقائياً</string>
+    <string name="grant_permission">منح الإذن</string>
+    <string name="use_default_city">اختيار مدينة بديلة</string>
+</resources>

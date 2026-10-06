@@ -1,0 +1,6 @@
+{
+  "name": "طقس ومطر",
+  "description": "تطبيق طقس مجاني مع ويدجت للشاشة الرئيسية يعرض درجات الحرارة والأمطار وتوقعات 7 أيام بدقة",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
