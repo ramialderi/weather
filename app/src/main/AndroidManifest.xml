@@ -31,7 +31,8 @@
 
         <receiver
             android:name=".widget.WeatherWidgetProvider"
-            android:exported="true">
+            android:exported="true"
+            android:label="@string/widget_7day_summary_title">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="com.example.weatherrain.ACTION_REFRESH_WIDGET" />
@@ -43,7 +44,8 @@
 
         <receiver
             android:name=".widget.CurrentTempWidgetProvider"
-            android:exported="true">
+            android:exported="true"
+            android:label="@string/widget_current_temp_title">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="com.example.weatherrain.ACTION_REFRESH_CURRENT_TEMP" />

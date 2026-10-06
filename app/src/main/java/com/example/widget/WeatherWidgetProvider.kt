@@ -11,13 +11,13 @@ import android.util.Log
 import android.widget.RemoteViews
 import com.example.MainActivity
 import com.example.R
-import com.example.WeatherApp
+import com.example.data.local.AppDatabase
+import com.example.data.network.WeatherNetwork
+import com.example.data.repository.WeatherRepository
 import com.example.ui.model.WeatherCodeMapper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 class WeatherWidgetProvider : AppWidgetProvider() {
@@ -35,8 +35,14 @@ class WeatherWidgetProvider : AppWidgetProvider() {
             val pendingResult = goAsync()
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    val app = context.applicationContext as? WeatherApp
-                    app?.repository?.syncWidgetDataNow()
+                    val db = AppDatabase.getInstance(context)
+                    val repo = WeatherRepository(
+                        db.weatherDao(),
+                        WeatherNetwork.api,
+                        WeatherNetwork.geocodingApi,
+                        context.applicationContext
+                    )
+                    repo.syncWidgetDataNow()
                     updateAllWidgets(context)
                 } catch (e: Exception) {
                     Log.e("WeatherWidgetProvider", "Refresh error: ${e.message}")
@@ -93,6 +99,7 @@ class WeatherWidgetProvider : AppWidgetProvider() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             views.setOnClickPendingIntent(R.id.widget_root, pendingLaunch)
+            views.setOnClickPendingIntent(R.id.widget_location_text, pendingLaunch)
 
             // Setup Refresh Intent
             val refreshIntent = Intent(context, WeatherWidgetProvider::class.java).apply {
@@ -106,38 +113,47 @@ class WeatherWidgetProvider : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.widget_refresh_button, pendingRefresh)
 
-            // Query DB synchronously in background / thread
+            // Immediately apply initial layout to avoid launcher timeout
+            try {
+                appWidgetManager.updateAppWidget(appWidgetId, views)
+            } catch (e: Exception) {
+                Log.w("WeatherWidgetProvider", "Initial sync update error: ${e.message}")
+            }
+
+            // 7 days definition
+            data class DayWidgetViews(
+                val nameId: Int,
+                val iconId: Int,
+                val tempMaxId: Int,
+                val tempMinId: Int,
+                val rainAmountId: Int
+            )
+
+            val dayContainers = listOf(
+                DayWidgetViews(R.id.day_0_name, R.id.day_0_icon, R.id.day_0_temp_max, R.id.day_0_temp_min, R.id.day_0_rain_amount),
+                DayWidgetViews(R.id.day_1_name, R.id.day_1_icon, R.id.day_1_temp_max, R.id.day_1_temp_min, R.id.day_1_rain_amount),
+                DayWidgetViews(R.id.day_2_name, R.id.day_2_icon, R.id.day_2_temp_max, R.id.day_2_temp_min, R.id.day_2_rain_amount),
+                DayWidgetViews(R.id.day_3_name, R.id.day_3_icon, R.id.day_3_temp_max, R.id.day_3_temp_min, R.id.day_3_rain_amount),
+                DayWidgetViews(R.id.day_4_name, R.id.day_4_icon, R.id.day_4_temp_max, R.id.day_4_temp_min, R.id.day_4_rain_amount),
+                DayWidgetViews(R.id.day_5_name, R.id.day_5_icon, R.id.day_5_temp_max, R.id.day_5_temp_min, R.id.day_5_rain_amount),
+                DayWidgetViews(R.id.day_6_name, R.id.day_6_icon, R.id.day_6_temp_max, R.id.day_6_temp_min, R.id.day_6_rain_amount)
+            )
+
+            // Query DB & fetch live weather safely in background
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    val app = context.applicationContext as? WeatherApp
-                    val db = app?.database ?: return@launch
-                    val dao = db.weatherDao()
-                    val city = dao.getSelectedCitySync()
+                    val db = AppDatabase.getInstance(context)
+                    val repo = WeatherRepository(
+                        db.weatherDao(),
+                        WeatherNetwork.api,
+                        WeatherNetwork.geocodingApi,
+                        context.applicationContext
+                    )
 
-                    if (city != null) {
-                        val cache = dao.getWeatherCacheSync(city.id)
-                        val forecast = dao.getDailyForecastSync(city.id)
-
+                    val data = repo.ensureWidgetDataReady()
+                    if (data != null) {
+                        val (city, forecast) = data
                         views.setTextViewText(R.id.widget_location_text, city.name)
-
-                        // 7 days definition
-                        data class DayWidgetViews(
-                            val nameId: Int,
-                            val iconId: Int,
-                            val tempMaxId: Int,
-                            val tempMinId: Int,
-                            val rainAmountId: Int
-                        )
-
-                        val dayContainers = listOf(
-                            DayWidgetViews(R.id.day_0_name, R.id.day_0_icon, R.id.day_0_temp_max, R.id.day_0_temp_min, R.id.day_0_rain_amount),
-                            DayWidgetViews(R.id.day_1_name, R.id.day_1_icon, R.id.day_1_temp_max, R.id.day_1_temp_min, R.id.day_1_rain_amount),
-                            DayWidgetViews(R.id.day_2_name, R.id.day_2_icon, R.id.day_2_temp_max, R.id.day_2_temp_min, R.id.day_2_rain_amount),
-                            DayWidgetViews(R.id.day_3_name, R.id.day_3_icon, R.id.day_3_temp_max, R.id.day_3_temp_min, R.id.day_3_rain_amount),
-                            DayWidgetViews(R.id.day_4_name, R.id.day_4_icon, R.id.day_4_temp_max, R.id.day_4_temp_min, R.id.day_4_rain_amount),
-                            DayWidgetViews(R.id.day_5_name, R.id.day_5_icon, R.id.day_5_temp_max, R.id.day_5_temp_min, R.id.day_5_rain_amount),
-                            DayWidgetViews(R.id.day_6_name, R.id.day_6_icon, R.id.day_6_temp_max, R.id.day_6_temp_min, R.id.day_6_rain_amount)
-                        )
 
                         for (i in 0 until minOf(7, forecast.size)) {
                             val item = forecast[i]
@@ -149,7 +165,6 @@ class WeatherWidgetProvider : AppWidgetProvider() {
                             views.setTextViewText(ids.tempMaxId, "${item.tempMax.toInt()}°")
                             views.setTextViewText(ids.tempMinId, "${item.tempMin.toInt()}°")
 
-                            // Daily rainfall amount below temperature
                             val rainText = if (item.precipitationSum > 0.0) {
                                 "${String.format(Locale.US, "%.1f", item.precipitationSum)}mm"
                             } else {
@@ -158,10 +173,13 @@ class WeatherWidgetProvider : AppWidgetProvider() {
                             views.setTextViewText(ids.rainAmountId, rainText)
                         }
 
-                        // Generate weekly chart bitmap with rainfall peaks and temperature curves
                         if (forecast.isNotEmpty()) {
-                            val chartBitmap = WidgetChartRenderer.createWeeklyChartBitmap(forecast)
-                            views.setImageViewBitmap(R.id.widget_rain_chart, chartBitmap)
+                            try {
+                                val chartBitmap = WidgetChartRenderer.createWeeklyChartBitmap(forecast, 480, 110)
+                                views.setImageViewBitmap(R.id.widget_rain_chart, chartBitmap)
+                            } catch (e: Exception) {
+                                Log.e("WeatherWidgetProvider", "Chart generation error: ${e.message}")
+                            }
                         }
                     } else {
                         views.setTextViewText(R.id.widget_location_text, "طقس ومطر")
@@ -169,7 +187,7 @@ class WeatherWidgetProvider : AppWidgetProvider() {
 
                     appWidgetManager.updateAppWidget(appWidgetId, views)
                 } catch (e: Exception) {
-                    Log.e("WeatherWidgetProvider", "updateWidget error: ${e.message}")
+                    Log.e("WeatherWidgetProvider", "updateWidget background error: ${e.message}")
                 }
             }
         }

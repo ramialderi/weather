@@ -13,7 +13,8 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="4dp">
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -36,8 +37,7 @@
                 android:layout_width="14dp"
                 android:layout_height="14dp"
                 android:contentDescription="Location"
-                android:src="@drawable/ic_weather_drop"
-                android:tint="#38BDF8" />
+                android:src="@drawable/ic_weather_drop" />
 
             <TextView
                 android:id="@+id/widget_location_text"
@@ -62,7 +62,7 @@
             android:src="@drawable/ic_weather_refresh" />
     </LinearLayout>
 
-    <Spacer
+    <View
         android:layout_width="match_parent"
         android:layout_height="6dp" />
 
@@ -459,7 +459,7 @@
 
     </LinearLayout>
 
-    <Spacer
+    <View
         android:layout_width="match_parent"
         android:layout_height="4dp" />
 
@@ -467,8 +467,7 @@
     <ImageView
         android:id="@+id/widget_rain_chart"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="56dp"
         android:contentDescription="مخطط الأمطار والحرارة الأسبوعي"
         android:scaleType="fitXY" />
 

@@ -20,8 +20,8 @@ object WidgetChartRenderer {
      */
     fun createWeeklyChartBitmap(
         forecastList: List<DailyForecastEntity>,
-        width: Int = 640,
-        height: Int = 140
+        width: Int = 480,
+        height: Int = 110
     ): Bitmap {
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)

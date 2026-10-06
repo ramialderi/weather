@@ -206,7 +206,12 @@ class WeatherRepository(
 
     // Direct synchronous fetch for widget background refresh
     suspend fun syncWidgetDataNow() = withContext(Dispatchers.IO) {
-        val city = dao.getSelectedCitySync() ?: return@withContext
+        var city = dao.getSelectedCitySync()
+        if (city == null) {
+            initializeDefaultCityIfNeeded()
+            city = dao.getSelectedCitySync()
+        }
+        if (city == null) return@withContext
         try {
             val response = api.getForecast(
                 latitude = city.latitude,
@@ -215,6 +220,27 @@ class WeatherRepository(
             saveForecastResponse(city.id, response)
         } catch (e: Exception) {
             Log.e("WeatherRepository", "Widget background sync failed: ${e.message}")
+        }
+    }
+
+    suspend fun ensureWidgetDataReady(): Pair<CityEntity, List<DailyForecastEntity>>? = withContext(Dispatchers.IO) {
+        try {
+            var city = dao.getSelectedCitySync()
+            if (city == null) {
+                initializeDefaultCityIfNeeded()
+                city = dao.getSelectedCitySync()
+            }
+            if (city == null) return@withContext null
+
+            var forecast = dao.getDailyForecastSync(city.id)
+            if (forecast.isEmpty()) {
+                refreshWeatherForCity(city.id, city.latitude, city.longitude)
+                forecast = dao.getDailyForecastSync(city.id)
+            }
+            Pair(city, forecast)
+        } catch (e: Exception) {
+            Log.e("WeatherRepository", "ensureWidgetDataReady failed: ${e.message}")
+            null
         }
     }
 }

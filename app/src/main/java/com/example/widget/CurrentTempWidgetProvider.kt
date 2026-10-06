@@ -11,7 +11,9 @@ import android.util.Log
 import android.widget.RemoteViews
 import com.example.MainActivity
 import com.example.R
-import com.example.WeatherApp
+import com.example.data.local.AppDatabase
+import com.example.data.network.WeatherNetwork
+import com.example.data.repository.WeatherRepository
 import com.example.ui.model.WeatherCodeMapper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,8 +34,14 @@ class CurrentTempWidgetProvider : AppWidgetProvider() {
             val pendingResult = goAsync()
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    val app = context.applicationContext as? WeatherApp
-                    app?.repository?.syncWidgetDataNow()
+                    val db = AppDatabase.getInstance(context)
+                    val repo = WeatherRepository(
+                        db.weatherDao(),
+                        WeatherNetwork.api,
+                        WeatherNetwork.geocodingApi,
+                        context.applicationContext
+                    )
+                    repo.syncWidgetDataNow()
                     updateAllWidgets(context)
                 } catch (e: Exception) {
                     Log.e("CurrentTempWidget", "Refresh error: ${e.message}")
@@ -81,6 +89,7 @@ class CurrentTempWidgetProvider : AppWidgetProvider() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             views.setOnClickPendingIntent(R.id.widget_current_root, pendingLaunch)
+            views.setOnClickPendingIntent(R.id.widget_current_city, pendingLaunch)
 
             // Setup Refresh Intent
             val refreshIntent = Intent(context, CurrentTempWidgetProvider::class.java).apply {
@@ -94,16 +103,27 @@ class CurrentTempWidgetProvider : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.widget_current_refresh, pendingRefresh)
 
+            // Immediately apply initial layout to avoid launcher timeout
+            try {
+                appWidgetManager.updateAppWidget(appWidgetId, views)
+            } catch (e: Exception) {
+                Log.w("CurrentTempWidget", "Initial sync update error: ${e.message}")
+            }
+
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    val app = context.applicationContext as? WeatherApp
-                    val db = app?.database ?: return@launch
-                    val dao = db.weatherDao()
-                    val city = dao.getSelectedCitySync()
+                    val db = AppDatabase.getInstance(context)
+                    val repo = WeatherRepository(
+                        db.weatherDao(),
+                        WeatherNetwork.api,
+                        WeatherNetwork.geocodingApi,
+                        context.applicationContext
+                    )
 
-                    if (city != null) {
-                        val cache = dao.getWeatherCacheSync(city.id)
-                        val forecast = dao.getDailyForecastSync(city.id)
+                    val data = repo.ensureWidgetDataReady()
+                    if (data != null) {
+                        val (city, forecast) = data
+                        val cache = db.weatherDao().getWeatherCacheSync(city.id)
                         val today = forecast.firstOrNull()
 
                         views.setTextViewText(R.id.widget_current_city, city.name)
